@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone # new: timedelta, timezone
 
 from django.db import models
 from django.conf import settings as djsettings
@@ -209,7 +209,7 @@ class Subscription(PaddleBaseModel):
         except cls.DoesNotExist:
             return cls.objects.create(pk=pk, **data)
 
-        if subscription.event_time < data["event_time"]:
+        if subscription.event_time < data["event_time"] + timedelta(seconds=5): # new: (different) webhook events can have exact same event_time; TODO: use event id as order criteria
             cls.objects.filter(pk=pk).update(**data)
 
     def __str__(self):
@@ -233,6 +233,7 @@ class Checkout(models.Model):
 @receiver(signals.subscription_updated)
 @receiver(signals.subscription_cancelled)
 @receiver(signals.subscription_payment_succeeded)
+@receiver(signals.subscription_payment_failed) # new
 def subscription_event(sender, payload, *args, **kwargs):
     Subscription.create_or_update_by_payload(payload)
 
@@ -261,7 +262,6 @@ def convert_datetime_strings_to_datetimes(data, model):
             data[field] = datetime.strptime(data[field], PADDLE_DATE_FORMAT)
 
         if djsettings.USE_TZ:
-            local_time_zone = timezone.get_default_timezone()
-            data[field] = timezone.make_aware(data[field], local_time_zone)
+            data[field] = timezone.make_aware(data[field], timezone.utc) # new: paddle event_time is utc
 
     return data
