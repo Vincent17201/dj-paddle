@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone # new: timedelta, timezone
+from datetime import datetime, timedelta, timezone as tz # new: timedelta, timezone
 
 from django.db import models
 from django.conf import settings as djsettings
@@ -152,6 +152,7 @@ class Subscription(PaddleBaseModel):
     currency = models.CharField(max_length=3)
     email = models.EmailField()
     event_time = models.DateTimeField()
+    alert_id = models.BigIntegerField(null=True, blank=True) # new
     marketing_consent = models.BooleanField()
     next_bill_date = models.DateTimeField()
     passthrough = models.TextField()
@@ -262,6 +263,6 @@ def convert_datetime_strings_to_datetimes(data, model):
             data[field] = datetime.strptime(data[field], PADDLE_DATE_FORMAT)
 
         if djsettings.USE_TZ:
-            data[field] = timezone.make_aware(data[field], timezone.utc) # new: paddle event_time is utc
+            data[field] = timezone.make_aware(data[field], tz.utc) # new: paddle event_time is utc
 
     return data
