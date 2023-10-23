@@ -210,7 +210,8 @@ class Subscription(PaddleBaseModel):
         except cls.DoesNotExist:
             return cls.objects.create(pk=pk, **data)
 
-        if subscription.event_time < data["event_time"] + timedelta(seconds=5): # new: (different) webhook events can have exact same event_time; TODO: use event id as order criteria
+        recent_alert_id =  0 if subscription.alert_id is None else subscription.alert_id
+        if subscription.event_time < data["event_time"] + timedelta(seconds=5) and recent_alert_id < int(data["alert_id"]): # new: (different) webhook events can have exact same event_time; use event id as order criteria
             cls.objects.filter(pk=pk).update(**data)
 
     def __str__(self):
