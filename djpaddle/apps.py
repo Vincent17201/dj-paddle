@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-
+from . import settings
 
 class DjpaddleConfig(AppConfig):
     """
@@ -7,3 +7,4 @@ class DjpaddleConfig(AppConfig):
     """
 
     name = "djpaddle"
+    default_auto_field = settings.DJPADDLE_DEFAULT_AUTO_FIELD or "django.db.models.AutoField"
